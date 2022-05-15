@@ -9,6 +9,8 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+using namespace std;
+
 //==============================================================================
 SimpleEQAudioProcessor::SimpleEQAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -166,7 +168,8 @@ bool SimpleEQAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* SimpleEQAudioProcessor::createEditor()
 {
-    return new SimpleEQAudioProcessorEditor (*this);
+    //return new SimpleEQAudioProcessorEditor (*this);
+    return new juce::GenericAudioProcessorEditor(*this);
 }
 
 //==============================================================================
@@ -182,6 +185,36 @@ void SimpleEQAudioProcessor::setStateInformation (const void* data, int sizeInBy
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
 }
+
+// adds all necessary parameters for plugin functionality
+juce::AudioProcessorValueTreeState::ParameterLayout SimpleEQAudioProcessor::createParameterLayout()
+{
+    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+    
+    layout.add(make_unique<juce::AudioParameterFloat>("lowCutFreq", "LowCut Freq", juce::NormalisableRange<float>(20.0f, 20000.0f, 1.f, 1.f), 40.f));
+    layout.add(make_unique<juce::AudioParameterFloat>("highCutFreq", "HighCut Freq", juce::NormalisableRange<float>(20.0f, 20000.0f, 1.f, 1.f), 20000.f));
+    layout.add(make_unique<juce::AudioParameterFloat>("peakFreq", "Peak Freq", juce::NormalisableRange<float>(20.0f, 20000.0f, 1.f, 1.f), 750.f));
+    layout.add(make_unique<juce::AudioParameterFloat>("peakGain", "Peak Gain", juce::NormalisableRange<float>(-24.0f, 24.0f, 0.5f, 1.f), -2.f));
+    layout.add(make_unique<juce::AudioParameterFloat>("peakQ", "Peak Q", juce::NormalisableRange<float>(0.1f, 10.0f, 0.05f, 1.f), 1.f));
+    
+    juce::StringArray parameterChoices;
+
+    // TODO find prettier way to do this
+
+    for (int i = 0; i < 4; ++i) {
+        juce::String str;
+        str << (12 + i * 12);
+        str << " dB/oct";
+        parameterChoices.add(str);
+    }
+
+    layout.add(make_unique<juce::AudioParameterChoice>("lowCutSlope", "LowCut Slope", parameterChoices, 0));
+    layout.add(make_unique<juce::AudioParameterChoice>("highCutSlope", "HighCut Slope", parameterChoices, 0));
+    
+    return layout;
+}
+
+
 
 //==============================================================================
 // This creates new instances of the plugin..
